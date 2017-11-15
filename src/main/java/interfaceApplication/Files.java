@@ -10,6 +10,7 @@ import org.json.simple.JSONObject;
 import JGrapeSystem.rMsg;
 import Model.CommonModel;
 import apps.appsProxy;
+import authority.plvDef.plvType;
 import browser.PhantomJS;
 import file.fileHelper;
 import file.uploadFileInfo;
@@ -40,6 +41,7 @@ public class Files {
         gDbSpecField.importDescription(appsProxy.tableConfig("Files"));
         files.descriptionModel(gDbSpecField);
         files.bindApp();
+        files.enableCheck();//开启权限检查
     }
 
     /**
@@ -54,6 +56,12 @@ public class Files {
         String oldname = "", extname = "", type = "", fid;
         uploadFileInfo out = null;
         JSONObject Info = new JSONObject(), object = null; // 文件信息
+        JSONObject rMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 100);//设置默认查询权限
+    	JSONObject uMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 200);
+    	JSONObject dMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 300);
+    	object.put("rMode", rMode.toJSONString()); //添加默认查看权限
+    	object.put("uMode", uMode.toJSONString()); //添加默认修改权限
+    	object.put("dMode", dMode.toJSONString()); //添加默认删除权限
         String result = rMsg.netMSG(100, "文件上传失败");
         JSONObject post = (JSONObject) execRequest.getChannelValue(grapeHttpUnit.formdata);
         if (post != null) {
@@ -109,7 +117,13 @@ public class Files {
      */
     private JSONObject add(JSONObject object) {
         JSONObject temp = null;
-        String info = (String) files.data(object).insertOnce();
+        JSONObject rMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 100);//设置默认查询权限
+    	JSONObject uMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 200);
+    	JSONObject dMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 300);
+    	object.put("rMode", rMode.toJSONString()); //添加默认查看权限
+    	object.put("uMode", uMode.toJSONString()); //添加默认修改权限
+    	object.put("dMode", dMode.toJSONString()); //添加默认删除权限
+        String info = (String) files.data(object).insertEx();
         temp = getFileInfo(info);
         return temp;
     }
@@ -229,14 +243,14 @@ public class Files {
      * @return
      */
     public String FileUpdate(String fid, String fileInfo) {
-        int code = 99;
+    	boolean objects = false; 
         JSONObject temp = null;
         String result = rMsg.netMSG(100, "修改失败");
         JSONObject object = JSONObject.toJSON(fileInfo);
         if (!StringHelper.InvaildString(fid) && ObjectId.isValid(fid) && object != null && object.size() > 0) {
-            code = files.eq("_id", fid).data(object).update() != null ? 0 : 99;
+        	objects = files.eq("_id", fid).data(object).updateEx();
             temp = getFileInfo(fid);
-            result = code == 0 ? rMsg.netMSG(0, "新增成功", (temp != null && temp.size() > 0) ? temp : new JSONObject())
+            result = objects ? rMsg.netMSG(0, "修改成功", (temp != null && temp.size() > 0) ? temp : new JSONObject())
                     : result;
         }
         return result;
