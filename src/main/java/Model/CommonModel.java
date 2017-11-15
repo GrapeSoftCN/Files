@@ -40,8 +40,9 @@ public class CommonModel {
 				filter.eq(key, value);
 			}
 			condArray = filter.build();
+		}else{
+		    condArray = JSONArray.toJSONArray(Info);
 		}
-		condArray = JSONArray.toJSONArray(Info);
 		return condArray;
 	}
 

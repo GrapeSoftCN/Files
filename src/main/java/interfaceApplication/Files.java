@@ -22,6 +22,7 @@ import json.JSONHelper;
 import nlogger.nlogger;
 import rpc.execRequest;
 import security.codec;
+import session.session;
 import string.StringHelper;
 import time.TimeHelper;
 
@@ -29,71 +30,81 @@ public class Files {
     private GrapeTreeDBModel files;
     private GrapeDBSpecField gDbSpecField;
     private CommonModel model;
-    private UploadModel uploadModel; // 文件上传转换相关
+//    private UploadModel uploadModel; // 文件上传转换相关
     private String thumailPath = "\\File\\upload\\icon\\folder.ico";
+    private session se;
+    private JSONObject userInfo = null;
+    private String currentWeb = null;
 
     public Files() {
-        uploadModel = new UploadModel();
+//        uploadModel = new UploadModel();
         model = new CommonModel();
 
         files = new GrapeTreeDBModel();
         gDbSpecField = new GrapeDBSpecField();
+        System.out.println("tableConfig: "+appsProxy.tableConfig("Files"));
         gDbSpecField.importDescription(appsProxy.tableConfig("Files"));
         files.descriptionModel(gDbSpecField);
         files.bindApp();
-        files.enableCheck();//开启权限检查
+        
+        se = new session();
+        userInfo = se.getDatas();
+        if (userInfo != null && userInfo.size() != 0) {
+            currentWeb = userInfo.getString("currentWeb"); // 当前用户所属网站id
+        }
+//        files.enableCheck();//开启权限检查
     }
 
-    /**
-     * 上传文件
-     * 
-     * @param fatherid
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public String uploadFile(String fatherid) {
-        long size = 0;
-        String oldname = "", extname = "", type = "", fid;
-        uploadFileInfo out = null;
-        JSONObject Info = new JSONObject(), object = null; // 文件信息
-        JSONObject rMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 100);//设置默认查询权限
-    	JSONObject uMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 200);
-    	JSONObject dMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 300);
-    	object.put("rMode", rMode.toJSONString()); //添加默认查看权限
-    	object.put("uMode", uMode.toJSONString()); //添加默认修改权限
-    	object.put("dMode", dMode.toJSONString()); //添加默认删除权限
-        String result = rMsg.netMSG(100, "文件上传失败");
-        JSONObject post = (JSONObject) execRequest.getChannelValue(grapeHttpUnit.formdata);
-        if (post != null) {
-            if (!post.containsKey("file")) {
-                out = (uploadFileInfo) post.get("media");
-                oldname = out.getClientName();
-                type = out.getFileType();
-                String tip = out.getContent().toString();
-                File tempfile = new File(tip);
-                if (tempfile.exists()) {
-                    size = tempfile.length();
-                }
-            } else {
-                out = (uploadFileInfo) post.get("file");
-                oldname = post.getString("name");
-                type = post.getString("type");
-                size = Long.parseLong(post.getString("size"));
-            }
-            Info.put("fileoldname", oldname);
-            Info.put("filetype", type);
-            Info.put("size", size);
-            Info.put("fileextname", extname);
-            String tip = uploadModel.upload(out, oldname, Info); // 上传操作
-            if (tip.equals("true")) {
-                fid = (String) files.data(uploadModel.AddFileInfo(Info)).insertOnce();
-                // 查询文件信息
-                object = getFileInfo(fid);
-                result = (object != null && object.size() > 0) ? rMsg.netMSG(true, object) : result;
-            }
-        }
-        return result;
-    }
+//    /**
+//     * 上传文件
+//     * 
+//     * @param fatherid
+//     * @return
+//     */
+//    @SuppressWarnings("unchecked")
+//    public String uploadFile(String fatherid) {
+//        long size = 0;
+//        String oldname = "", extname = "", type = "", fid;
+//        uploadFileInfo out = null;
+//        JSONObject Info = new JSONObject(), object = null; // 文件信息
+//        JSONObject rMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 100);//设置默认查询权限
+//    	JSONObject uMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 200);
+//    	JSONObject dMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 300);
+//    	object.put("rMode", rMode.toJSONString()); //添加默认查看权限
+//    	object.put("uMode", uMode.toJSONString()); //添加默认修改权限
+//    	object.put("dMode", dMode.toJSONString()); //添加默认删除权限
+//        String result = rMsg.netMSG(100, "文件上传失败");
+//        JSONObject post = (JSONObject) execRequest.getChannelValue(grapeHttpUnit.formdata);
+//        if (post != null) {
+//            if (!post.containsKey("file")) {
+//                out = (uploadFileInfo) post.get("media");
+//                oldname = out.getClientName();
+//                type = out.getFileType();
+//                String tip = out.getContent().toString();
+//                File tempfile = new File(tip);
+//                if (tempfile.exists()) {
+//                    size = tempfile.length();
+//                }
+//            } else {
+//                out = (uploadFileInfo) post.get("file");
+//                oldname = post.getString("name");
+//                type = post.getString("type");
+//                size = Long.parseLong(post.getString("size"));
+//            }
+//            Info.put("fileoldname", oldname);
+//            Info.put("filetype", type);
+//            Info.put("size", size);
+//            Info.put("fileextname", extname);
+//            String tip = uploadModel.upload(out, oldname, Info); // 上传操作
+//            if (tip.equals("true")) {
+//                fid = (String) files.data(uploadModel.AddFileInfo(Info)).insertOnce();
+//                // 查询文件信息
+//                object = getFileInfo(fid);
+//                result = (object != null && object.size() > 0) ? rMsg.netMSG(true, object) : result;
+//            }
+//        }
+//        return result;
+//    }
 
     /**
      * 新增文件夹
@@ -451,7 +462,7 @@ public class Files {
      */
     public String PageBy(int idx, int pageSize, String fileInfo) {
         long total = 0;
-        if (!StringHelper.InvaildString(fileInfo)) {
+        if (StringHelper.InvaildString(fileInfo)) {
             JSONArray condArray = model.buildCond(fileInfo);
             if (condArray != null && condArray.size() > 0) {
                 files.where(condArray);
@@ -459,8 +470,8 @@ public class Files {
                 return rMsg.netPAGE(idx, pageSize, total, new JSONArray());
             }
         }
-        JSONArray array = files.dirty().page(idx, pageSize);
-        total = files.count();
+        total = files.dirty().count();
+        JSONArray array = files.page(idx, pageSize);
         return rMsg.netPAGE(idx, pageSize, total, (array != null && array.size() > 0) ? array : new JSONArray());
     }
 
