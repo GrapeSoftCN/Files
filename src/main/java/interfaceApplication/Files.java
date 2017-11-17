@@ -2,6 +2,7 @@ package interfaceApplication;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.bson.types.ObjectId;
 import org.json.simple.JSONArray;
@@ -14,6 +15,7 @@ import authority.plvDef.plvType;
 import browser.PhantomJS;
 import file.fileHelper;
 import file.uploadFileInfo;
+import httpClient.request;
 import httpServer.grapeHttpUnit;
 import image.imageHelper;
 import interfaceModel.GrapeDBSpecField;
@@ -30,81 +32,85 @@ public class Files {
     private GrapeTreeDBModel files;
     private GrapeDBSpecField gDbSpecField;
     private CommonModel model;
-//    private UploadModel uploadModel; // 文件上传转换相关
+    // private UploadModel uploadModel; // 文件上传转换相关
     private String thumailPath = "\\File\\upload\\icon\\folder.ico";
     private session se;
     private JSONObject userInfo = null;
     private String currentWeb = null;
 
     public Files() {
-//        uploadModel = new UploadModel();
+        // uploadModel = new UploadModel();
         model = new CommonModel();
 
         files = new GrapeTreeDBModel();
         gDbSpecField = new GrapeDBSpecField();
-        System.out.println("tableConfig: "+appsProxy.tableConfig("Files"));
         gDbSpecField.importDescription(appsProxy.tableConfig("Files"));
         files.descriptionModel(gDbSpecField);
         files.bindApp();
-        
+
         se = new session();
         userInfo = se.getDatas();
         if (userInfo != null && userInfo.size() != 0) {
             currentWeb = userInfo.getString("currentWeb"); // 当前用户所属网站id
         }
-//        files.enableCheck();//开启权限检查
+        // files.enableCheck();//开启权限检查
     }
 
-//    /**
-//     * 上传文件
-//     * 
-//     * @param fatherid
-//     * @return
-//     */
-//    @SuppressWarnings("unchecked")
-//    public String uploadFile(String fatherid) {
-//        long size = 0;
-//        String oldname = "", extname = "", type = "", fid;
-//        uploadFileInfo out = null;
-//        JSONObject Info = new JSONObject(), object = null; // 文件信息
-//        JSONObject rMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 100);//设置默认查询权限
-//    	JSONObject uMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 200);
-//    	JSONObject dMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 300);
-//    	object.put("rMode", rMode.toJSONString()); //添加默认查看权限
-//    	object.put("uMode", uMode.toJSONString()); //添加默认修改权限
-//    	object.put("dMode", dMode.toJSONString()); //添加默认删除权限
-//        String result = rMsg.netMSG(100, "文件上传失败");
-//        JSONObject post = (JSONObject) execRequest.getChannelValue(grapeHttpUnit.formdata);
-//        if (post != null) {
-//            if (!post.containsKey("file")) {
-//                out = (uploadFileInfo) post.get("media");
-//                oldname = out.getClientName();
-//                type = out.getFileType();
-//                String tip = out.getContent().toString();
-//                File tempfile = new File(tip);
-//                if (tempfile.exists()) {
-//                    size = tempfile.length();
-//                }
-//            } else {
-//                out = (uploadFileInfo) post.get("file");
-//                oldname = post.getString("name");
-//                type = post.getString("type");
-//                size = Long.parseLong(post.getString("size"));
-//            }
-//            Info.put("fileoldname", oldname);
-//            Info.put("filetype", type);
-//            Info.put("size", size);
-//            Info.put("fileextname", extname);
-//            String tip = uploadModel.upload(out, oldname, Info); // 上传操作
-//            if (tip.equals("true")) {
-//                fid = (String) files.data(uploadModel.AddFileInfo(Info)).insertOnce();
-//                // 查询文件信息
-//                object = getFileInfo(fid);
-//                result = (object != null && object.size() > 0) ? rMsg.netMSG(true, object) : result;
-//            }
-//        }
-//        return result;
-//    }
+    // /**
+    // * 上传文件
+    // *
+    // * @param fatherid
+    // * @return
+    // */
+    // @SuppressWarnings("unchecked")
+    // public String uploadFile(String fatherid) {
+    // long size = 0;
+    // String oldname = "", extname = "", type = "", fid;
+    // uploadFileInfo out = null;
+    // JSONObject Info = new JSONObject(), object = null; // 文件信息
+    // JSONObject rMode = new JSONObject(plvType.chkType,
+    // plvType.powerVal).puts(plvType.chkVal, 100);//设置默认查询权限
+    // JSONObject uMode = new JSONObject(plvType.chkType,
+    // plvType.powerVal).puts(plvType.chkVal, 200);
+    // JSONObject dMode = new JSONObject(plvType.chkType,
+    // plvType.powerVal).puts(plvType.chkVal, 300);
+    // object.put("rMode", rMode.toJSONString()); //添加默认查看权限
+    // object.put("uMode", uMode.toJSONString()); //添加默认修改权限
+    // object.put("dMode", dMode.toJSONString()); //添加默认删除权限
+    // String result = rMsg.netMSG(100, "文件上传失败");
+    // JSONObject post = (JSONObject)
+    // execRequest.getChannelValue(grapeHttpUnit.formdata);
+    // if (post != null) {
+    // if (!post.containsKey("file")) {
+    // out = (uploadFileInfo) post.get("media");
+    // oldname = out.getClientName();
+    // type = out.getFileType();
+    // String tip = out.getContent().toString();
+    // File tempfile = new File(tip);
+    // if (tempfile.exists()) {
+    // size = tempfile.length();
+    // }
+    // } else {
+    // out = (uploadFileInfo) post.get("file");
+    // oldname = post.getString("name");
+    // type = post.getString("type");
+    // size = Long.parseLong(post.getString("size"));
+    // }
+    // Info.put("fileoldname", oldname);
+    // Info.put("filetype", type);
+    // Info.put("size", size);
+    // Info.put("fileextname", extname);
+    // String tip = uploadModel.upload(out, oldname, Info); // 上传操作
+    // if (tip.equals("true")) {
+    // fid = (String) files.data(uploadModel.AddFileInfo(Info)).insertOnce();
+    // // 查询文件信息
+    // object = getFileInfo(fid);
+    // result = (object != null && object.size() > 0) ? rMsg.netMSG(true,
+    // object) : result;
+    // }
+    // }
+    // return result;
+    // }
 
     /**
      * 新增文件夹
@@ -116,8 +122,13 @@ public class Files {
     public String AddFolder(String fileInfo) {
         JSONObject object = JSONHelper.string2json(fileInfo);
         object.put("ThumbnailImage", thumailPath);
+        object.put("filetype", 0);
         JSONObject temp = add(object);
-        return rMsg.netMSG(0, "新增成功", (temp != null && temp.size() > 0) ? temp : new JSONObject());
+        if (temp == null || temp.size() <= 0) {
+            return rMsg.netMSG(1, "非法参数，新建文件夹失败");
+        } else {
+            return rMsg.netMSG(0, temp);
+        }
     }
 
     /**
@@ -127,15 +138,22 @@ public class Files {
      * @return
      */
     private JSONObject add(JSONObject object) {
+        String info = null;
         JSONObject temp = null;
-        JSONObject rMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 100);//设置默认查询权限
-    	JSONObject uMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 200);
-    	JSONObject dMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 300);
-    	object.put("rMode", rMode.toJSONString()); //添加默认查看权限
-    	object.put("uMode", uMode.toJSONString()); //添加默认修改权限
-    	object.put("dMode", dMode.toJSONString()); //添加默认删除权限
-        String info = (String) files.data(object).insertEx();
-        temp = getFileInfo(info);
+        JSONObject rMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 100);// 设置默认查询权限
+        JSONObject uMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 200);
+        JSONObject dMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 300);
+        object.put("rMode", rMode.toJSONString()); // 添加默认查看权限
+        object.put("uMode", uMode.toJSONString()); // 添加默认修改权限
+        object.put("dMode", dMode.toJSONString()); // 添加默认删除权限
+        try {
+            info = (String) files.data(object).autoComplete().insertEx();
+        } catch (Exception e) {
+            nlogger.logout(e);
+        }
+        if (StringHelper.InvaildString(info)) {
+            temp = getFileInfo(info);
+        }
         return temp;
     }
 
@@ -171,7 +189,7 @@ public class Files {
             object.put("fatherid", "0");
             object.remove("type");
             temp = add(object);
-            result = rMsg.netMSG(0, "新增成功", (temp != null && temp.size() > 0) ? temp : new JSONObject()); 
+            result = rMsg.netMSG(0, "新增成功", (temp != null && temp.size() > 0) ? temp : new JSONObject());
         }
         return result;
     }
@@ -254,15 +272,14 @@ public class Files {
      * @return
      */
     public String FileUpdate(String fid, String fileInfo) {
-    	boolean objects = false; 
+        boolean objects = false;
         JSONObject temp = null;
         String result = rMsg.netMSG(100, "修改失败");
         JSONObject object = JSONObject.toJSON(fileInfo);
-        if (!StringHelper.InvaildString(fid) && ObjectId.isValid(fid) && object != null && object.size() > 0) {
-        	objects = files.eq("_id", fid).data(object).updateEx();
+        if (StringHelper.InvaildString(fid) && object != null && object.size() > 0) {
+            objects = files.eq("_id", fid).data(object).updateEx();
             temp = getFileInfo(fid);
-            result = objects ? rMsg.netMSG(0, "修改成功", (temp != null && temp.size() > 0) ? temp : new JSONObject())
-                    : result;
+            result = objects ? rMsg.netMSG(0, "修改成功", (temp != null && temp.size() > 0) ? temp : new JSONObject()) : result;
         }
         return result;
     }
@@ -281,7 +298,7 @@ public class Files {
         if (getFileInfo(folderid) == null) {
             return rMsg.netMSG(1, "文件夹不存在");
         }
-        if (!StringHelper.InvaildString(fids)) {
+        if (StringHelper.InvaildString(fids)) {
             String FileInfo = "{\"fatherid\":\"" + folderid + "\"" + "}";
             code = updates(fids, JSONObject.toJSON(FileInfo));
             result = code == 0 ? rMsg.netMSG(0, "文件移动至文件夹成功") : result;
@@ -390,8 +407,9 @@ public class Files {
         int code = 99;
         if (FileInfo != null && FileInfo.size() > 0) {
             String[] value = fids.split(",");
+            files.or();
             for (String fid : value) {
-                if (ObjectId.isValid(fid)) {
+                if (StringHelper.InvaildString(fid)) {
                     files.eq("_id", fid);
                 }
             }
@@ -471,7 +489,7 @@ public class Files {
             }
         }
         total = files.dirty().count();
-        JSONArray array = files.page(idx, pageSize);
+        JSONArray array = files.asc("filetype").desc("time").page(idx, pageSize);
         return rMsg.netPAGE(idx, pageSize, total, (array != null && array.size() > 0) ? array : new JSONArray());
     }
 
@@ -497,7 +515,89 @@ public class Files {
     }
 
     public String BatchDelete(String FileInfo) {
-        return null;
+        int code = 0;
+        Object temp;
+        boolean flag = false;
+        String result = rMsg.netMSG(100, "文件删除失败");
+        JSONArray array = JSONArray.toJSONArray(FileInfo);
+        List<String> list = new ArrayList<>();
+        List<String> lists = new ArrayList<>();
+        long FIXSIZE = new Long((long) 4 * 1024 * 1024 * 1024);
+        for (int i = 0, len = array.size(); i < len; i++) {
+            JSONObject object = (JSONObject) array.get(i);
+            if (object.containsKey("isdelete")) {
+                flag = true;
+                list.add(object.get("_id").toString());
+            } else {
+                temp = object.get("size");
+                if (temp == null) {
+                    lists.add(object.get("_id").toString());
+                } else {
+                    if ((long) temp > FIXSIZE) {
+                        flag = true;
+                        list.add(object.get("_id").toString());
+                    } else {
+                        lists.add(object.get("_id").toString());
+                    }
+                }
+            }
+        }
+        if (flag) {
+            code = ckDelete(StringHelper.join(list));
+        }
+        if (lists.size() != 0) {
+            String infos = "{\"isdelete\":1}";
+            code = RecyBatch(StringHelper.join(lists), JSONHelper.string2json(infos));
+        }
+        return code == 0 ? rMsg.netMSG(0, "删除成功") : result;
+    }
+
+    public int ckDelete(String fid) {
+        if (!fid.contains(",")) {
+            if (isfile(fid) == 0) {
+                deleteall(fid);
+            }
+        } else {
+            String[] value = fid.split(",");
+            ArrayList<String> list = new ArrayList<>();
+            for (int i = 0, len = value.length; i < len; i++) {
+                if (isfile(value[i]) == 0) {
+                    // 判断该文件夹下是否有文件
+                    list.add(value[i]);
+                }
+            }
+            if (list.size() != 0) {
+                deleteall(StringHelper.join(list));
+            }
+        }
+        return delete(fid);
+    }
+
+    private void deleteall(String fid) {
+        if (fid.contains(",")) {
+            files.or();
+            String[] value = fid.split(",");
+            for (int i = 0, len = value.length; i < len; i++) {
+                files.eq("fatherid", value[i]);
+            }
+        } else {
+            files.eq("fatherid", fid);
+        }
+        files.deleteAll();
+    }
+
+    // 删除文件[包含批量删除]
+    private int delete(String fid) {
+        if (fid.contains(",")) {
+            files.or();
+            String[] value = fid.split(",");
+            for (int i = 0, len = value.length; i < len; i++) {
+                files.eq("_id", new ObjectId(value[i]));
+            }
+        } else {
+            files.eq("_id", new ObjectId(fid));
+        }
+        return files.deleteAll() != 0 ? 0 : 99;
     }
 
     /**
@@ -508,10 +608,110 @@ public class Files {
      */
     private JSONObject getFileInfo(String fid) {
         JSONObject object = null;
-        if (!StringHelper.InvaildString(fid)) {
+        if (StringHelper.InvaildString(fid)) {
             object = files.eq("_id", fid).find();
         }
         return object;
     }
 
+    /**
+     * 获取文件内容
+     * 
+     * @param fid
+     * @return
+     */
+    public String getWord(String fid) {
+        JSONObject object = getFileInfo(fid);
+        String message = rMsg.netMSG(1, "连接文件服务器失败，无法获取文件内容");
+        if (object != null) {
+            try {
+                // String hoString = "http://" + getFileIp("file", 0);
+                String hoString = getConfig("fileHost");
+                String filepath = object.get("filepath").toString();
+                filepath = filepath.replace("\\", "@t");
+                message = request.Get(hoString + "/FileServer/FileConvert?sourceFile=" + filepath + "&type=2");
+                message = message.replace("gb2312", "utf-8");
+            } catch (Exception e) {
+                e.printStackTrace();
+                message = rMsg.netMSG(1, "连接文件服务器失败，无法获取文件内容");
+            }
+        }
+        return message;
+    }
+
+    /**
+     * 根据文件id获取文件信息
+     * 
+     * @project GrapeFile
+     * @package interfaceApplication
+     * @file Files.java
+     * 
+     * @param fid
+     * @return {fid1:{},fid2:{}}
+     *
+     */
+    @SuppressWarnings("unchecked")
+    public String getFileByID(String fid) {
+        String id;
+        JSONObject object;
+        JSONObject rObject = new JSONObject();
+        String[] value = fid.split(",");
+        files.or();
+        for (String tempid : value) {
+            if (tempid != null && !tempid.equals("") && !tempid.equals("null")) {
+                files.eq("_id", tempid);
+            }
+        }
+        JSONArray array = files.field("_id,fileoldname,size,filetype,filepath,ThumbnailImage").select();
+        if (array != null && array.size() != 0) {
+            for (Object object2 : array) {
+                object = (JSONObject) object2;
+                id = object.getMongoID("_id");
+                rObject.put(id, setFile(object));
+            }
+        }
+        return (rObject != null && rObject.size() > 0) ? rObject.toJSONString() : new JSONObject().toJSONString();
+    }
+
+    /**
+     * 添加显示路径
+     * 
+     * @project GrapeFile
+     * @package interfaceApplication
+     * @file Files.java
+     * 
+     * @param object
+     * @return
+     *
+     */
+    @SuppressWarnings("unchecked")
+    private JSONObject setFile(JSONObject object) {
+        String value = "";
+        String[] key = { "filepath", "ThumbnailImage" };
+        if (object != null && object.size() > 0) {
+            // String FileDir = getAppIp("file").split("/")[1];
+            String FileDir = getConfig("fileHost");
+            for (String string : key) {
+                if (object.containsKey(string)) {
+                    value = FileDir + object.getString(string);
+                    object.put(string, value);
+                }
+            }
+        }
+        return object;
+    }
+
+    private String getConfig(String key) {
+        String value = "";
+        try {
+            JSONObject object = appsProxy.configValue().getJson("other");
+            if (object != null && object.size() > 0) {
+                value = object.getString(key);
+            }
+        } catch (Exception e) {
+            nlogger.logout(e);
+            value = "";
+        }
+        return value;
+    }
 }
