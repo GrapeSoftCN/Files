@@ -13,6 +13,7 @@ import Model.CommonModel;
 import apps.appsProxy;
 import authority.plvDef.plvType;
 import browser.PhantomJS;
+import check.checkHelper;
 import file.fileHelper;
 import file.uploadFileInfo;
 import httpClient.request;
@@ -32,14 +33,14 @@ public class Files {
     private GrapeTreeDBModel files;
     private GrapeDBSpecField gDbSpecField;
     private CommonModel model;
-    // private UploadModel uploadModel; // 文件上传转换相关
+    private UploadModel uploadModel; // 文件上传转换相关
     private String thumailPath = "\\File\\upload\\icon\\folder.ico";
     private session se;
     private JSONObject userInfo = null;
     private String currentWeb = null;
 
     public Files() {
-        // uploadModel = new UploadModel();
+        uploadModel = new UploadModel();
         model = new CommonModel();
 
         files = new GrapeTreeDBModel();
@@ -55,62 +56,6 @@ public class Files {
         }
         // files.enableCheck();//开启权限检查
     }
-
-    // /**
-    // * 上传文件
-    // *
-    // * @param fatherid
-    // * @return
-    // */
-    // @SuppressWarnings("unchecked")
-    // public String uploadFile(String fatherid) {
-    // long size = 0;
-    // String oldname = "", extname = "", type = "", fid;
-    // uploadFileInfo out = null;
-    // JSONObject Info = new JSONObject(), object = null; // 文件信息
-    // JSONObject rMode = new JSONObject(plvType.chkType,
-    // plvType.powerVal).puts(plvType.chkVal, 100);//设置默认查询权限
-    // JSONObject uMode = new JSONObject(plvType.chkType,
-    // plvType.powerVal).puts(plvType.chkVal, 200);
-    // JSONObject dMode = new JSONObject(plvType.chkType,
-    // plvType.powerVal).puts(plvType.chkVal, 300);
-    // object.put("rMode", rMode.toJSONString()); //添加默认查看权限
-    // object.put("uMode", uMode.toJSONString()); //添加默认修改权限
-    // object.put("dMode", dMode.toJSONString()); //添加默认删除权限
-    // String result = rMsg.netMSG(100, "文件上传失败");
-    // JSONObject post = (JSONObject)
-    // execRequest.getChannelValue(grapeHttpUnit.formdata);
-    // if (post != null) {
-    // if (!post.containsKey("file")) {
-    // out = (uploadFileInfo) post.get("media");
-    // oldname = out.getClientName();
-    // type = out.getFileType();
-    // String tip = out.getContent().toString();
-    // File tempfile = new File(tip);
-    // if (tempfile.exists()) {
-    // size = tempfile.length();
-    // }
-    // } else {
-    // out = (uploadFileInfo) post.get("file");
-    // oldname = post.getString("name");
-    // type = post.getString("type");
-    // size = Long.parseLong(post.getString("size"));
-    // }
-    // Info.put("fileoldname", oldname);
-    // Info.put("filetype", type);
-    // Info.put("size", size);
-    // Info.put("fileextname", extname);
-    // String tip = uploadModel.upload(out, oldname, Info); // 上传操作
-    // if (tip.equals("true")) {
-    // fid = (String) files.data(uploadModel.AddFileInfo(Info)).insertOnce();
-    // // 查询文件信息
-    // object = getFileInfo(fid);
-    // result = (object != null && object.size() > 0) ? rMsg.netMSG(true,
-    // object) : result;
-    // }
-    // }
-    // return result;
-    // }
 
     /**
      * 新增文件夹
@@ -137,6 +82,7 @@ public class Files {
      * @param object
      * @return
      */
+    @SuppressWarnings("unchecked")
     private JSONObject add(JSONObject object) {
         String info = null;
         JSONObject temp = null;
@@ -262,6 +208,30 @@ public class Files {
             }
         }
         return destFile;
+    }
+
+    /**
+     * 上传文件
+     * @param fatherid
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public String FileUpload(String fatherid){
+        JSONObject object;
+        String fid = "";
+        JSONObject obj = uploadModel.uploadFile(fatherid);
+        String result = rMsg.netMSG(100, "文件上传失败");
+        if (obj!=null && obj.size() > 0) {
+            if (obj.containsKey("errorcode")) {
+                return obj.toJSONString();
+            }
+            obj.put("wbid", currentWeb);
+            fid = (String) files.data(uploadModel.AddFileInfo(obj)).insertOnce();
+            // 查询文件信息
+            object = getFileInfo(fid);
+            result = (object != null && object.size() > 0) ? rMsg.netMSG(true, object) : result;
+        }
+        return result;
     }
 
     /**
@@ -658,8 +628,10 @@ public class Files {
         String[] value = fid.split(",");
         files.or();
         for (String tempid : value) {
-            if (tempid != null && !tempid.equals("") && !tempid.equals("null")) {
-                files.eq("_id", tempid);
+            if (StringHelper.InvaildString(tempid)) {
+                if (ObjectId.isValid(tempid) || checkHelper.isInt(tempid)) {
+                    files.eq("_id", tempid);
+                }
             }
         }
         JSONArray array = files.field("_id,fileoldname,size,filetype,filepath,ThumbnailImage").select();
