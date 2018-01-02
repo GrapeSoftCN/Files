@@ -8,26 +8,22 @@ import org.bson.types.ObjectId;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import JGrapeSystem.rMsg;
 import Model.CommonModel;
-import apps.appsProxy;
-import authority.plvDef.plvType;
-import browser.PhantomJS;
-import check.checkHelper;
-import file.fileHelper;
-import file.uploadFileInfo;
-import httpClient.request;
-import httpServer.grapeHttpUnit;
-import image.imageHelper;
-import interfaceModel.GrapeDBSpecField;
-import interfaceModel.GrapeTreeDBModel;
-import json.JSONHelper;
-import nlogger.nlogger;
-import rpc.execRequest;
-import security.codec;
-import session.session;
-import string.StringHelper;
-import time.TimeHelper;
+import common.java.JGrapeSystem.rMsg;
+import common.java.apps.appsProxy;
+import common.java.browser.PhantomJS;
+import common.java.check.checkHelper;
+import common.java.file.fileHelper;
+import common.java.httpClient.request;
+import common.java.image.imageHelper;
+import common.java.interfaceModel.GrapeDBSpecField;
+import common.java.interfaceModel.GrapeTreeDBModel;
+import common.java.json.JSONHelper;
+import common.java.nlogger.nlogger;
+import common.java.security.codec;
+import common.java.session.session;
+import common.java.string.StringHelper;
+import common.java.time.TimeHelper;
 
 public class Files {
     private GrapeTreeDBModel files;
@@ -54,7 +50,6 @@ public class Files {
         if (userInfo != null && userInfo.size() != 0) {
             currentWeb = userInfo.getString("currentWeb"); // 当前用户所属网站id
         }
-        // files.enableCheck();//开启权限检查
     }
 
     /**
@@ -82,16 +77,9 @@ public class Files {
      * @param object
      * @return
      */
-    @SuppressWarnings("unchecked")
     private JSONObject add(JSONObject object) {
         String info = null;
         JSONObject temp = null;
-        JSONObject rMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 100);// 设置默认查询权限
-        JSONObject uMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 200);
-        JSONObject dMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 300);
-        object.put("rMode", rMode.toJSONString()); // 添加默认查看权限
-        object.put("uMode", uMode.toJSONString()); // 添加默认修改权限
-        object.put("dMode", dMode.toJSONString()); // 添加默认删除权限
         try {
             info = (String) files.data(object).autoComplete().insertEx();
         } catch (Exception e) {
@@ -326,7 +314,11 @@ public class Files {
         return updates(fid, FileInfo);
     }
 
-    // 多个数据操作
+    /**
+     * 多个数据操作
+     * @param fids
+     * @return
+     */
     private String Batch(String[] fids) {
         ArrayList<String> list = new ArrayList<>();
         for (int i = 0, len = fids.length; i < len; i++) {
@@ -340,7 +332,11 @@ public class Files {
         return StringHelper.join(list);
     }
 
-    // 判断是否为文件
+    /**
+     * 判断是否为文件
+     * @param fid
+     * @return
+     */
     private int isfile(String fid) {
         int ckcode = 0;
         String type = getFileInfo(fid).get("filetype").toString();
@@ -352,7 +348,11 @@ public class Files {
         return ckcode;
     }
 
-    // 判断该文件夹下是否有文件，返回所有的id，包含文件夹id
+    /**
+     * 判断该文件夹下是否有文件，返回所有的id，包含文件夹id
+     * @param fid
+     * @return
+     */
     private String getfid(String fid) {
         ArrayList<String> list = new ArrayList<>();
         String cond = "{\"fatherid\":\"" + fid + "\"" + "}";
@@ -450,6 +450,7 @@ public class Files {
      */
     public String PageBy(int idx, int pageSize, String fileInfo) {
         long total = 0;
+        JSONArray array = null;
         if (StringHelper.InvaildString(fileInfo)) {
             JSONArray condArray = model.buildCond(fileInfo);
             if (condArray != null && condArray.size() > 0) {
@@ -458,9 +459,12 @@ public class Files {
                 return rMsg.netPAGE(idx, pageSize, total, new JSONArray());
             }
         }
-        total = files.dirty().count();
-        JSONArray array = files.asc("filetype").desc("time").page(idx, pageSize);
-        return rMsg.netPAGE(idx, pageSize, total, (array != null && array.size() > 0) ? array : new JSONArray());
+        if (StringHelper.InvaildString(currentWeb)) {
+            files.eq("wbid", currentWeb);
+            total = files.dirty().count();
+            array = files.asc("filetype").desc("time").page(idx, pageSize);
+        }
+        return rMsg.netPAGE(idx, pageSize, total, array);
     }
 
     /**

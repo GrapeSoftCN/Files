@@ -7,8 +7,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import apps.appsProxy;
-import database.dbFilter;
+import common.java.apps.appsProxy;
+import common.java.database.dbFilter;
+
 
 public class CommonModel {
 	private static AtomicInteger fileNO = new AtomicInteger(0);
@@ -24,7 +25,7 @@ public class CommonModel {
 	/**
 	 * 整合参数，将JSONObject类型的参数封装成JSONArray类型
 	 * 
-	 * @param object
+	 * @param object   //参数不含有isdelete字段，则添加默认条件为isdelete为0
 	 * @return
 	 */
 	public JSONArray buildCond(String Info) {
@@ -34,6 +35,9 @@ public class CommonModel {
 		JSONObject object = JSONObject.toJSON(Info);
 		dbFilter filter = new dbFilter();
 		if (object != null && object.size() > 0) {
+		    if (!object.containsKey("isdelete")) {  
+                filter.eq("isdelete", 0);
+            }
 			for (Object object2 : object.keySet()) {
 				key = object2.toString();
 				value = object.get(key);

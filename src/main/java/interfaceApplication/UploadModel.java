@@ -5,19 +5,18 @@ import java.io.FileOutputStream;
 
 import org.json.simple.JSONObject;
 
-import JGrapeSystem.rMsg;
 import Model.CommonModel;
-import authority.plvDef.plvType;
-import file.fileHelper;
-import file.uploadFileInfo;
-import httpServer.grapeHttpUnit;
 import io.netty.buffer.ByteBuf;
 import net.coobird.thumbnailator.Thumbnails;
-import nlogger.nlogger;
-import rpc.execRequest;
-import session.session;
-import string.StringHelper;
-import time.TimeHelper;
+import common.java.JGrapeSystem.rMsg;
+import common.java.file.fileHelper;
+import common.java.file.uploadFileInfo;
+import common.java.httpServer.grapeHttpUnit;
+import common.java.nlogger.nlogger;
+import common.java.rpc.execRequest;
+import common.java.session.session;
+import common.java.string.StringHelper;
+import common.java.time.TimeHelper;
 
 public class UploadModel {
     private CommonModel model;
@@ -47,12 +46,6 @@ public class UploadModel {
         String oldname = "", extname = "", type = "", tip = null;
         uploadFileInfo out = null;
         JSONObject Info = new JSONObject();
-        JSONObject rMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 100);// 设置默认查询权限
-        JSONObject uMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 200);
-        JSONObject dMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 300);
-        Info.put("rMode", rMode.toJSONString()); // 添加默认查看权限
-        Info.put("uMode", uMode.toJSONString()); // 添加默认修改权限
-        Info.put("dMode", dMode.toJSONString()); // 添加默认删除权限
         JSONObject post = (JSONObject) execRequest.getChannelValue(grapeHttpUnit.formdata);
         if (post != null && post.size() > 0) {
             if (!post.containsKey("file")) {
